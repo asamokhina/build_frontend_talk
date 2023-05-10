@@ -1,0 +1,24 @@
+<table style='border-collapse: collapse;'>
+    <thead style='background-color: #F5F5F5;'>
+        <tr style='padding: 8px; border: 1px solid #ddd;'>
+            <th>Date</th>
+            <th>Steps</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for idx, row in df.iterrows() %}
+        {% if idx == idx_max %}
+            <tr style='background-color: #3b7a57; border: 1px solid #ddd;'>
+        {% else %}
+            <tr style='border: 1px solid #ddd;'>
+        {% endif %}
+            <td style='padding: 8px; border: 1px solid #ddd;'>
+                {{ idx }}
+            </td>
+            <td style='padding: 8px; border: 1px solid #ddd;'>
+                {{  row["Actual"]  }}
+            </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
