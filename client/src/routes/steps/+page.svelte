@@ -15,8 +15,20 @@ function toggleTable() {
 async function fetchData() {
     try {
 
-        const response = ' {"2023-02-12T00:00:00":{"Actual":13771,"Goal":10000},"2023-02-13T00:00:00":{"Actual":9483,"Goal":10000}}'
-        const rawData = JSON.parse(response);
+        // const response = ' {"2023-02-12T00:00:00":{"Actual":13771,"Goal":10000},"2023-02-13T00:00:00":{"Actual":9483,"Goal":10000}}'
+        const rawData = await fetch("/data", {
+            method: "GET",
+            headers: {
+            "Content-Type": "application/json",
+            },
+            redirect: "follow",
+        }).then((response) => {
+            if (response?.ok) {
+            return response.json();
+            } else {
+            return undefined;
+            }
+        });
         const formattedData = {};
         for (const [date, {
                 Actual,
@@ -43,93 +55,91 @@ onMount(async () => {
 </script>
 
 <main>
-    {#if stepsData}
+  {#if stepsData}
     <button on:click={toggleTable}>
-        {#if showTable}
+      {#if showTable}
         Hide Table
-        {:else}
+      {:else}
         Show Table
-        {/if}
+      {/if}
     </button>
     {#if showTable}
-    <div class="table-container">
+      <div class="table-container">
         <h2>Steps Data</h2>
         <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Actual Steps</th>
-                    <th>Goal Steps</th>
-                </tr>
-            </thead>
-            <tbody>
-                {#each Object.entries(stepsData) as [date, { Actual, Goal }]}
-                <tr>
-                    <td>{date}</td>
-                    <td>{Actual}</td>
-                    <td>{Goal}</td>
-                </tr>
-                {/each}
-            </tbody>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Actual Steps</th>
+              <th>Goal Steps</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each Object.entries(stepsData) as [date, { Actual, Goal }]}
+              <tr>
+                <td>{date}</td>
+                <td>{Actual}</td>
+                <td>{Goal}</td>
+              </tr>
+            {/each}
+          </tbody>
         </table>
-    </div>
+      </div>
     {/if}
-
-    {:else if error}
+  {:else if error}
     <p>{error}</p>
-    {:else}
+  {:else}
     <p>Loading...</p>
-    {/if}
-
+  {/if}
 </main>
 
 <style>
-main {
+  main {
     font-family: Arial, sans-serif;
-}
+  }
 
-.table-container {
+  .table-container {
     margin: 20px;
     padding: 20px;
     border: 1px solid #ccc;
     border-radius: 10px;
     box-shadow: 2px 2px 5px #ccc;
-}
+  }
 
-table {
+  table {
     width: 100%;
     border-collapse: collapse;
-}
+  }
 
-thead th {
+  thead th {
     text-align: left;
     background-color: #eee;
     padding: 10px;
-}
+  }
 
-tbody td {
+  tbody td {
     padding: 10px;
     border-bottom: 1px solid #ccc;
-}
+  }
 
-tbody td:first-of-type {
+  tbody td:first-of-type {
     font-weight: bold;
-}
+  }
 
-.plot-container {
+  .plot-container {
     margin: 20px;
     padding: 20px;
     border: 1px solid #ccc;
     border-radius: 10px;
     box-shadow: 2px 2px 5px #ccc;
-}
+  }
 
-.plot {
+  .plot {
     width: 100%;
     height: 100%;
-}
+  }
 
-button {
+  button {
     background-color: #0077c2;
     color: white;
     border: none;
@@ -139,13 +149,13 @@ button {
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.2s ease-in-out;
-}
+  }
 
-button:hover {
+  button:hover {
     background-color: #005ca9;
-}
+  }
 
-button:active {
+  button:active {
     background-color: #003d70;
-}
+  }
 </style>

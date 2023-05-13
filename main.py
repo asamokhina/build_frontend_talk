@@ -4,11 +4,11 @@ from typing import Dict
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from fastapi import FastAPI, Response, Request
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi import FastAPI, Request, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from starlette.responses import FileResponse, StreamingResponse
+from starlette.responses import FileResponse
 
 from data import create_basic_plot, get_data
 
@@ -18,9 +18,6 @@ templates = Jinja2Templates(directory="templates")
 
 app = FastAPI()
 
-# add frontend build files to the app,
-# without mounting FastAPI can't see all the required files
-app.mount("/", StaticFiles(directory=frontend, html=True))
 
 # basic steps data
 @app.get("/view/basic-steps")
@@ -81,10 +78,7 @@ def read_basic_html_steps(response: Response) -> str:
     return HTMLResponse(html_table)
 
 
-@app.get(
-        "/view/template-table",
-        response_class=HTMLResponse
-)
+@app.get("/view/template-table", response_class=HTMLResponse)
 async def template_table(request: Request):
     df = get_data()
     idx_max = df["Actual"].idxmax()
@@ -112,11 +106,20 @@ def read_matplotlib_plot():
     return Response(content=buffer.getvalue(), media_type="image/png")
 
 
+@app.get("/data")
+def get_data_as_dict():
+    df = get_data()
+    return JSONResponse(content=df.to_dict(orient="records"))
+
+
 @app.get("/svelte-steps")
 def js_frontend():
     return FileResponse(os.path.join(frontend, "steps.html"))
 
 
+# add frontend build files to the app,
+# without mounting FastAPI can't see all the required files
+app.mount("/", StaticFiles(directory=frontend, html=True))
 # utils endpoint to check all urls
 @app.get("/content")
 def content():
@@ -125,4 +128,3 @@ def content():
     )
 
     return HTMLResponse(urls)
-
