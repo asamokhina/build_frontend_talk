@@ -109,7 +109,7 @@ def read_matplotlib_plot():
 @app.get("/data")
 def get_data_as_dict():
     df = get_data()
-    return JSONResponse(content=df.to_dict(orient="records"))
+    return JSONResponse(content=df.to_dict(orient="index"))
 
 
 @app.get("/svelte-steps")

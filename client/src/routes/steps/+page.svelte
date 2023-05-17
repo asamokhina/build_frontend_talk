@@ -3,19 +3,20 @@ import {
     onMount
 } from 'svelte';
 
-let stepsData = null;
+import daygridPlugin from '@fullcalendar/daygrid';
+import FullCalendar from '$lib/FullCalendar.svelte';
+
+let stepsData = new Map();
 let error = null;
+let events = [];
+let options = new Map();
 
-let showTable = true;
-
-function toggleTable() {
-    showTable = !showTable;
-}
-
-async function fetchData() {
+async function getOptions() {
     try {
 
-        // const response = ' {"2023-02-12T00:00:00":{"Actual":13771,"Goal":10000},"2023-02-13T00:00:00":{"Actual":9483,"Goal":10000}}'
+        // const response = '{"2023-02-12T00:00:00":{"Actual":13771,"Goal":10000},"2023-02-13T00:00:00":{"Actual":9483,"Goal":10000},"2023-02-14T00:00:00":{"Actual":9520,"Goal":10000}}'
+        // const rawDatatest = JSON.parse(response);
+
         const rawData = await fetch("/data", {
             method: "GET",
             headers: {
@@ -29,17 +30,14 @@ async function fetchData() {
             return undefined;
             }
         });
-        const formattedData = {};
-        for (const [date, {
-                Actual,
-                Goal
-            }] of Object.entries(rawData)) {
-            formattedData[new Date(date).toLocaleDateString()] = {
-                Actual,
-                Goal
-            };
-        }
-        stepsData = formattedData;
+
+        stepsData = rawData;
+        setCalendarEvents(stepsData);
+        options = {
+            events: events,
+            initialView: 'dayGridMonth',
+            plugins: [daygridPlugin],
+        };
 
     } catch (e) {
         console.error(e);
@@ -47,115 +45,58 @@ async function fetchData() {
     }
 }
 
-onMount(async () => {
+function setCalendarEvents(stepsData) {
 
-    await fetchData();
+    for (const [date, {
+            Actual,
+            Goal
+        }] of Object.entries(stepsData)) {
+        const event = {
+            title: `Steps: ${Actual}`,
+            start: date,
+            allDay: true,
+            backgroundColor: getBGColorBySteps(Actual),
+            textColor: getTextColorBySteps(Actual),
+            borderColor: 'transparent'
+        };
 
-});
+        events.push(event);
+    }
+
+}
+
+function getTextColorBySteps(steps) {
+    if (steps > 10000) {
+        return 'white'; // High steps, green color
+    } else if (steps > 5000) {
+        return '#3f3f3f'; // Moderate steps, yellow color
+    } else {
+        return 'white'; // Low steps, red color
+    }
+}
+
+function getBGColorBySteps(steps) {
+    if (steps > 10000) {
+        return '#8fb935'; // High steps, green color
+    } else if (steps > 5000) {
+        return '#e6e22e'; // Moderate steps, yellow color
+    } else {
+        return '#e64747'; // Low steps, red color
+    }
+}
+
+onMount(getOptions);
 </script>
 
 <main>
   {#if stepsData}
-    <button on:click={toggleTable}>
-      {#if showTable}
-        Hide Table
-      {:else}
-        Show Table
-      {/if}
-    </button>
-    {#if showTable}
-      <div class="table-container">
-        <h2>Steps Data</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Actual Steps</th>
-              <th>Goal Steps</th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each Object.entries(stepsData) as [date, { Actual, Goal }]}
-              <tr>
-                <td>{date}</td>
-                <td>{Actual}</td>
-                <td>{Goal}</td>
-              </tr>
-            {/each}
-          </tbody>
-        </table>
-      </div>
-    {/if}
-  {:else if error}
-    <p>{error}</p>
+    <div class="calendar">
+      <FullCalendar
+        {options}
+      />
+    </div>
   {:else}
-    <p>Loading...</p>
+    <p>Loading data...</p>
   {/if}
+
 </main>
-
-<style>
-  main {
-    font-family: Arial, sans-serif;
-  }
-
-  .table-container {
-    margin: 20px;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    box-shadow: 2px 2px 5px #ccc;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  thead th {
-    text-align: left;
-    background-color: #eee;
-    padding: 10px;
-  }
-
-  tbody td {
-    padding: 10px;
-    border-bottom: 1px solid #ccc;
-  }
-
-  tbody td:first-of-type {
-    font-weight: bold;
-  }
-
-  .plot-container {
-    margin: 20px;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    box-shadow: 2px 2px 5px #ccc;
-  }
-
-  .plot {
-    width: 100%;
-    height: 100%;
-  }
-
-  button {
-    background-color: #0077c2;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 8px 16px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s ease-in-out;
-  }
-
-  button:hover {
-    background-color: #005ca9;
-  }
-
-  button:active {
-    background-color: #003d70;
-  }
-</style>

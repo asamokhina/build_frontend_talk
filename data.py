@@ -7,7 +7,7 @@ def get_data():
     # transform 'date' column to date object
     df['Date'] = pd.to_datetime(df['Date'] + " " + ["2023"], format="%b %d %Y")
     df = df.set_index("Date")
-    
+    df.index = df.index.strftime('%Y-%m-%dT%H:%M:%S')
 
     return df
 
